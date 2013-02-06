@@ -7,11 +7,13 @@ import org.newdawn.slick.SlickException;
 import org.newdawn.slick.state.BasicGameState;
 import org.newdawn.slick.state.StateBasedGame;
 import org.newdawn.slick.Sound;
+import org.newdawn.slick.*;
 
 public class GameOver extends BasicGameState {
 	
 	private Play play;
 	private Sound lose;
+	private Image bg;
 	
 	public GameOver(int state, Play play) {
 		this.play=play;
@@ -23,9 +25,11 @@ public class GameOver extends BasicGameState {
 	
 	public void init(GameContainer arg0, StateBasedGame arg1) throws SlickException {
 		lose = new Sound("res/lose.wav");
+		bg = new Image("res/credits.png");
 	}
 
 	public void render(GameContainer arg0, StateBasedGame arg1, Graphics arg2) throws SlickException {
+		arg2.drawImage(bg, 0, 0);
 		arg2.drawString("YOU LOSE, LOSER!", 300, 200);
 		arg2.drawString("Final score: " + play.getScore(), 300, 220);
 		arg2.drawString("High scores:", 300, 240);
