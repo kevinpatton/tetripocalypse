@@ -28,10 +28,12 @@ public class Play extends BasicGameState {
 	public static final int boardHeight = 22;
 	public static final long tetradMoveDelay = 165;
 	public static final int HD_SCORE_MODIFIER = 2;
+	public static final int softDropDelay = 60;
 	
 	/** The delay, in milliseconds, between which tetrads
 		fall. */
 	private long blockFallDelay = 800;
+	private long tempBlockFallDelay = 0;
 	private int timeSinceFall = 0;
 	private int timeSinceMove = 0;
 	private int lineTargetForNextLevel = 10;
@@ -56,6 +58,7 @@ public class Play extends BasicGameState {
 	//input stuff
 	private boolean leftBeingHeldDown = false;
 	private boolean rightBeingHeldDown = false;
+	private boolean softBeingHeldDown = false;
 	
 	public HighScoreList highScoreList;
 	
@@ -169,22 +172,10 @@ public class Play extends BasicGameState {
 				next.setNext();
 				
 				checkForGameOver(input, sbg);
-				
-				//if (tetradInPlay.gameOver()) {
-					//gameOver = true;
-					//highScoreList.add(new Score("Player", score));
-					//saveHighScores();
-					//theme.stop();
-					//inGame = false;
-					//menu.menu.gameDone();
-					//input.clearKeyPressedRecord();
-					//sbg.enterState(2);
-				//}
-				
-				//next = new Tetrad(type, tetradImages[type - 1], board);
-				//next.setNext();
 			}
 			timeSinceFall = 0;
+			if (softBeingHeldDown) 
+				score += 1;
 		}
 		
 		checkForCompletedRows();
@@ -215,6 +206,18 @@ public class Play extends BasicGameState {
 				rightBeingHeldDown = true;
 			}
 			timeSinceMove = 0;
+		}
+		
+		if (!input.isKeyDown(Input.KEY_D) && softBeingHeldDown) {
+			softBeingHeldDown = false;
+			blockFallDelay = tempBlockFallDelay;
+			tempBlockFallDelay = 0;
+		}
+		
+		if (input.isKeyDown(Input.KEY_D) && !softBeingHeldDown) {
+			tempBlockFallDelay = blockFallDelay;
+			blockFallDelay = softDropDelay;
+			softBeingHeldDown = true;
 		}
 						
 		if (input.isKeyPressed(Input.KEY_UP)) {
