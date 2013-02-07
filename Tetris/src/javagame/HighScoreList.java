@@ -19,14 +19,16 @@ public class HighScoreList implements Serializable {
 		int lowestScore = highScores.get(0).score;
 		//and then we compare lowest score to s and see
 		//if s needs to be added to the list
-		//...
-		if (highScores.size() <= MAX_SIZE && s.score > lowestScore)
+		if (s.score > lowestScore) {
+			if (highScores.size() >= MAX_SIZE)
+				highScores.remove(0);
 			highScores.add(s);
+		}
 		Collections.sort(highScores);
 		Collections.reverse(highScores);
 	}
 
-	//returns this HighScoreList as a string for printing.
+	// Returns this HighScoreList in a String representation.
 	public String toString() {
 		String estr = "";
 		for (Score s : highScores) {
@@ -35,6 +37,9 @@ public class HighScoreList implements Serializable {
 		return estr;
 	}
 	
+	/** Populates this HighScoreList with default scores. You know,
+	 *  so the player can compete against zany names.
+	 *  @return the initialized list of Score objects */
 	private ArrayList<Score> generateDefaultScores() {
 		ArrayList<Score> scores = new ArrayList<Score>();
 		String[] names = {"Polypyrgonices", "Malaclypse", "Brobdingnag", "Zaphod Beeblebrox",
