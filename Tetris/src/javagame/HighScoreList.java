@@ -14,18 +14,25 @@ public class HighScoreList implements Serializable {
 		highScores = generateDefaultScores();
 	}
 	
-	public void add(Score s) {
+	/**
+	 * @param s the score to compare to the high score list and add if necessary
+	 * @return whether the player has made a high score
+	 */
+	public boolean add(Score s) {
 		Collections.sort(highScores);
 		int lowestScore = highScores.get(0).score;
+		boolean madeIt = false;
 		//and then we compare lowest score to s and see
 		//if s needs to be added to the list
 		if (s.score > lowestScore) {
 			if (highScores.size() >= MAX_SIZE)
 				highScores.remove(0);
 			highScores.add(s);
+			madeIt = true;
 		}
 		Collections.sort(highScores);
 		Collections.reverse(highScores);
+		return madeIt;
 	}
 
 	// Returns this HighScoreList in a String representation.

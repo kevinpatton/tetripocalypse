@@ -30,9 +30,9 @@ public class Menu extends BasicGameState {
 		int y = 0;
 		Interactable start = new MenuItemString("New Game", 0, y);
 		int lineHeight = start.getHeight();
-		Interactable options = new MenuItemString("Options", 0, y+=lineHeight);
-		Interactable credits = new MenuItemString("Credits", 0, y+=lineHeight);
-		Interactable quit = new MenuItemString("Quit", 0, y+=lineHeight);
+		Interactable options = new MenuItemString("Options", 0, y += lineHeight);
+		Interactable credits = new MenuItemString("Credits", 0, y += lineHeight);
+		Interactable quit = new MenuItemString("Quit", 0, y += lineHeight);
 		menu = new MenuStrip(start, options, credits, quit);
 		menu.setLocation(180, 200);
 	}
@@ -50,7 +50,7 @@ public class Menu extends BasicGameState {
 		switch (selection) {
 		case 0:
 			input.clearKeyPressedRecord();
-			menu.gameActive();//TODO: figure out how to use menu.gameDone()
+			menu.gameActive();
 			sbg.enterState(1); //play
 			break;
 		case 1:
@@ -58,7 +58,6 @@ public class Menu extends BasicGameState {
 			//sbg.enterState(OPTION SCREEN);
 			break;
 		case 2:
-			//TODO: this stuff.
 			input.clearKeyPressedRecord();
 			sbg.enterState(3);
 			break;

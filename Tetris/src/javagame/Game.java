@@ -13,6 +13,7 @@ public class Game extends StateBasedGame {
 	public static final int play = 1;
 	public static final int gameOver = 2;
 	public static final int credits = 3;
+	public static final int userInput = 4;
 	
 	public Game(String gameName) {
 		super(gameName);
@@ -23,6 +24,7 @@ public class Game extends StateBasedGame {
 		this.addState(p);
 		this.addState(new GameOver(gameOver, p));
 		this.addState(new Credits(credits));
+		this.addState(new UserInput(userInput));
 	}
 	
 	public void initStatesList(GameContainer gc) throws SlickException {
@@ -30,15 +32,19 @@ public class Game extends StateBasedGame {
 		this.getState(play).init(gc, this);
 		this.getState(gameOver).init(gc, this);
 		this.getState(credits).init(gc, this);
+		this.getState(userInput).init(gc, this);
 		this.enterState(menu);
 	}
 	
 	public static void main(String[] args) {
-		
+		boolean showFPS = false;
+		if (args.length == 1)
+			showFPS = Boolean.parseBoolean(args[0]);
 		AppGameContainer gameWindow;
 		try {
 			gameWindow = new AppGameContainer(new Game(gameName));
 			gameWindow.setDisplayMode(xDim, yDim, false);
+			gameWindow.setShowFPS(showFPS);
 			gameWindow.start();
 		} catch(SlickException e) {
 			e.printStackTrace();

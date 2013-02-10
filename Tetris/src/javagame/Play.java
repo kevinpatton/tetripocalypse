@@ -29,6 +29,7 @@ public class Play extends BasicGameState {
 	public static final long tetradMoveDelay = 165;
 	public static final int HD_SCORE_MODIFIER = 2;
 	public static final int softDropDelay = 60;
+	public static final int ghostFrameDelay = 50;
 	
 	/** The delay, in milliseconds, between which tetrads
 		fall. */
@@ -40,9 +41,12 @@ public class Play extends BasicGameState {
 	private int level = 1;
 	private int lines = 0;
 	private int score = 0;
+	
 	private SevenBag sevenBag;
 	private Image[] tetradImages;
 	private Tetrad tetradInPlay;
+	private Animation ghost;
+	
 	private Tetrad next;
 	private int[][] board;
 	boolean gameOver = false;
@@ -59,6 +63,8 @@ public class Play extends BasicGameState {
 	private boolean leftBeingHeldDown = false;
 	private boolean rightBeingHeldDown = false;
 	private boolean softBeingHeldDown = false;
+	
+	private boolean ghostingOn = false;
 	
 	public HighScoreList highScoreList;
 	
@@ -78,6 +84,10 @@ public class Play extends BasicGameState {
 			Image image = new Image("res/" + i + ".png");
 			tetradImages[i - 1] = image;
 		}
+		Image[] ghostImages = new Image[5];
+		for (int i = 0; i < 5; i++)
+			ghostImages[i] = new Image("res/ghost" + (i + 1) + ".png" );
+		ghost = new Animation(ghostImages, ghostFrameDelay);
 		// board has a border around the play area for collision
 		// detection purposes. The actual play area is only 10x20.
 		// Here we set up these boundaries in the board array.
@@ -133,6 +143,8 @@ public class Play extends BasicGameState {
 		drawTetrad(tetradInPlay, g);
 		drawNextBox(18, 0, g);
 		drawTetrad(next, g);
+		if (ghostingOn)
+			drawGhostTetrad(g);
 	}
 	
 	/**
@@ -219,7 +231,13 @@ public class Play extends BasicGameState {
 			blockFallDelay = softDropDelay;
 			softBeingHeldDown = true;
 		}
-						
+		
+		if (input.isKeyPressed(Input.KEY_F))
+			ghostingOn = !ghostingOn;
+		
+		if (input.isKeyPressed(Input.KEY_S))
+			score += 1000; //TODO: take this out of the final release
+		
 		if (input.isKeyPressed(Input.KEY_UP)) {
 			tetradInPlay.rotate();
 			rotate.play();
@@ -262,13 +280,16 @@ public class Play extends BasicGameState {
 	private void checkForGameOver(Input i, StateBasedGame s) {
 		if (tetradInPlay.gameOver()) {
 			gameOver = true;
-			highScoreList.add(new Score("Player", score));
+			boolean madeIt = highScoreList.add(new Score("Player", score));
 			saveHighScores();
 			theme.stop();
 			inGame = false;
 			menu.menu.gameDone();
 			i.clearKeyPressedRecord();
-			s.enterState(2);
+			if (madeIt)
+				s.enterState(4); //Input state. enter name for high score
+			else
+				s.enterState(2); //game over state
 		}
 	}
 	
@@ -284,6 +305,48 @@ public class Play extends BasicGameState {
 			drawBlock(location[i], location[i+1], t.getImage(), g);
 			i += 2;
 		}
+	}
+	
+	//TODO: finish this function.
+	/**
+	 * Renders a 'ghost' Tetrad signifying the location that the
+	 * tetrad in play would end up should the player perform a hard
+	 * drop.
+	 * @param g the render object
+	 */
+	private void drawGhostTetrad(Graphics g) {
+		//we have a ghost tetrad object..
+		int[] locationToDrawGhostTetrad = new int[8];
+		int[] playTetradLocation = tetradInPlay.getLocation();
+		for (int i = 0; i < 8; i++)
+			locationToDrawGhostTetrad[i] = playTetradLocation[i];
+		
+		while (!detectCollision(locationToDrawGhostTetrad)) {
+			locationToDrawGhostTetrad = drop(locationToDrawGhostTetrad);
+		}
+		locationToDrawGhostTetrad = raise(locationToDrawGhostTetrad);
+		//render
+		for (int i = 0; i < 8; i += 2)
+			drawGhostBlock(locationToDrawGhostTetrad[i], locationToDrawGhostTetrad[i + 1], g);
+	}
+	
+	private int[] drop(int[] location) {
+		for (int i = 1; i < 8; i += 2)
+			location[i] += 1;
+		return location;
+	}
+	
+	private int[] raise(int[] location) {
+		for (int i = 1; i < 8; i += 2)
+			location[i] -= 1;
+		return location;
+	}
+	
+	private boolean detectCollision(int[] location) {
+		for (int i = 0; i < 8; i += 2)
+			if (board[location[i]][location[i + 1]] != 0)
+				return true;
+		return false;
 	}
 	
 	/**
@@ -328,6 +391,7 @@ public class Play extends BasicGameState {
 			lineTargetForNextLevel += 10;
 			level++;
 			blockFallDelay *= timerDecayRate;
+			tempBlockFallDelay *= timerDecayRate;
 			if (tetrisAchieved) {
 				tetrisAchieved = false;
 			}
@@ -402,6 +466,8 @@ public class Play extends BasicGameState {
 			removeRow(i);
 	}
 	
+	// Resets the game so it appears as a new one. Called when
+	// the player loses.
 	public void resetGame() {
 		resetBoard();
 		score = 0;
@@ -494,6 +560,10 @@ public class Play extends BasicGameState {
 	 */
 	private void drawBlock(int x, int y, Image block, Graphics g) {
 		g.drawImage(block, playAreaOffsetX + blockSize*x, playAreaOffsetY+blockSize*y);
+	}
+	
+	private void drawGhostBlock(int x, int y, Graphics g) {
+		ghost.draw(playAreaOffsetX + blockSize*x, playAreaOffsetY+blockSize*y);
 	}
 	
 	public int getID() {
