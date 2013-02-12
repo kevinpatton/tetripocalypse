@@ -13,8 +13,9 @@ import java.io.*;
  * tetromino interchangeably. They both just mean tetris pieces,
  * really.
  */
+
 public class Play extends BasicGameState {
-		
+	
 	/**
 	 * This rate determines the decrease in time between
 	 * when Tetrads fall. It is multiplied by this time
@@ -30,6 +31,7 @@ public class Play extends BasicGameState {
 	public static final int HD_SCORE_MODIFIER = 2;
 	public static final int softDropDelay = 60;
 	public static final int ghostFrameDelay = 50;
+	public static final double clearModeDensity = 0.65;
 	
 	/** The delay, in milliseconds, between which tetrads
 		fall. */
@@ -69,6 +71,9 @@ public class Play extends BasicGameState {
 	public HighScoreList highScoreList;
 	
 	private Menu menu;
+	private UserInput userInput;
+	
+	private int gameMode = 0;
 	
 	public Play(int state) {
 	}
@@ -131,6 +136,8 @@ public class Play extends BasicGameState {
 		else
 			theme.resume();
 		inGame = true;
+		if (gameMode == 1)
+			initClearMode(clearModeDensity);
 	}
 	
 	//graphics
@@ -280,17 +287,25 @@ public class Play extends BasicGameState {
 	private void checkForGameOver(Input i, StateBasedGame s) {
 		if (tetradInPlay.gameOver()) {
 			gameOver = true;
-			boolean madeIt = highScoreList.add(new Score("Player", score));
+			//boolean madeIt = highScoreList.add(new Score("Player", score));
+			boolean madeIt = highScoreList.checkForHighScore(score);
 			saveHighScores();
 			theme.stop();
 			inGame = false;
 			menu.menu.gameDone();
+			userInput.receiveScore(score);
 			i.clearKeyPressedRecord();
-			if (madeIt)
+			if (madeIt) {
+				userInput.receiveScore(score);
 				s.enterState(4); //Input state. enter name for high score
+			}
 			else
 				s.enterState(2); //game over state
 		}
+	}
+	
+	public void setUserInput(UserInput u) {
+		userInput = u;
 	}
 	
 	/**
@@ -447,6 +462,22 @@ public class Play extends BasicGameState {
 		advanceLevelIfNecessary();
 	}
 	
+	private void initClearMode(double density) {
+		java.util.Random r = new java.util.Random();
+		for (int i = 20; i > 12; i--) {
+			for (int j = 1; j < 11; j++) {
+				if (r.nextDouble() < density) {
+					board[j][i] = r.nextInt(6);
+				}
+			}
+			//Here we make a hole if the entire row
+			//happens to be filled.
+			int[] row = getRow(i);
+			if (rowFull(row))
+				board[r.nextInt(10) + 1][i] = 0;
+		}
+	}
+	
 	//determines whether the player has completed a row.
 	private boolean rowFull(int[] row) {
 		for (int i = 1; i < 11; i++) {
@@ -548,6 +579,10 @@ public class Play extends BasicGameState {
 			g.drawImage(block, playAreaOffsetX+blockSize*x, playAreaOffsetY+blockSize*i);
 			g.drawImage(block, playAreaOffsetX+blockSize*(x+4), playAreaOffsetY+blockSize*i);
 		}
+	}
+	
+	public void setGameMode(int mode) {
+		gameMode = mode;
 	}
 	
 	/**

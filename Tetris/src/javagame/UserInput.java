@@ -26,11 +26,17 @@ public class UserInput extends BasicGameState {
 	private int timeSinceBlink = 0;
 	private int cursorX = INPUT_OFFSET;
 	private String userInput = "";
+	private int score = 0;
 	
 	private boolean blink = true;
+	private Play play;
 	
 	public UserInput(int ID) {
 		this.ID = ID;
+	}
+	
+	public void setPlay(Play p) {
+		play = p;
 	}
 
 	@Override
@@ -70,10 +76,16 @@ public class UserInput extends BasicGameState {
 		
 		Input input = gc.getInput();
 		if (input.isKeyPressed(Input.KEY_ENTER)) {
+			play.highScoreList.add(new Score(userInput, score));
 			userInput = "";
+			score = 0;
 			input.clearKeyPressedRecord();
 			sbg.enterState(2); //gameover state
 		}
+	}
+	
+	public void receiveScore(int score) {
+		this.score = score;
 	}
 
 	@Override

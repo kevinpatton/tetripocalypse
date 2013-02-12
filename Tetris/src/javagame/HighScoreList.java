@@ -34,6 +34,12 @@ public class HighScoreList implements Serializable {
 		Collections.reverse(highScores);
 		return madeIt;
 	}
+	
+	public boolean checkForHighScore(int score) {
+		Collections.sort(highScores);
+		int lowestScore = highScores.get(0).score;
+		return score > lowestScore;
+	}
 
 	// Returns this HighScoreList in a String representation.
 	public String toString() {

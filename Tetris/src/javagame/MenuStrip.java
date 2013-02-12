@@ -80,6 +80,10 @@ public class MenuStrip {
 		menuItems.get(0).changeItem("New Game");
 	}
 	
+	public int getSelection() {
+		return selection;
+	}
+	
 	public void render(Graphics g) {
 		cursorAnimation.draw(x - 40, y + selection * lineHeight);
 		for (Interactable i : menuItems) {
@@ -91,7 +95,7 @@ public class MenuStrip {
 	 * Obtains input from the parent class and performs
 	 * the necessary updates to this MenuStrip as a result.
 	 * @param input an object containing the user's input information
-	 * @return 
+	 * @return the menu selection chosen by the player
 	 */
 	public int acceptInput(Input input) {
 		if (input.isKeyPressed(nextKey)) {

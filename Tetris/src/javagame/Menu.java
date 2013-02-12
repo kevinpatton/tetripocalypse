@@ -15,6 +15,7 @@ public class Menu extends BasicGameState {
 	
 	public MenuStrip menu;
 	private UnicodeFont titleFont;
+	private Play play;
 	
 	public Menu(int state) {
 	}
@@ -51,7 +52,10 @@ public class Menu extends BasicGameState {
 		case 0:
 			input.clearKeyPressedRecord();
 			menu.gameActive();
-			sbg.enterState(1); //play
+			if (!play.inGame)
+				sbg.enterState(5);
+			else
+				sbg.enterState(1);
 			break;
 		case 1:
 			//TODO: this stuff.
@@ -65,6 +69,7 @@ public class Menu extends BasicGameState {
 			System.exit(0);
 			break;
 		}
+		
 		//int mouseXPos = Mouse.getX();
 		//int mouseYPos = Mouse.getY();
 		//mouse = "Mouse position x: " + mouseXPos + " y: " + mouseYPos;
@@ -73,6 +78,10 @@ public class Menu extends BasicGameState {
 		//if (input.isKeyDown(Input.KEY_DOWN)) { gordonY += 4; }
 		//if (input.isKeyDown(Input.KEY_LEFT)) { gordonX -= 4; }
 		//if (input.isKeyDown(Input.KEY_RIGHT)) { gordonX += 4; }
+	}
+	
+	public void setPlay(Play p) {
+		play = p;
 	}
 	
 	public int getID() {
