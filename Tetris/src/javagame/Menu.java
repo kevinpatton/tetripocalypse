@@ -2,7 +2,6 @@ package javagame;
 
 //import org.lwjgl.input.Mouse;
 import org.newdawn.slick.*;
-import org.newdawn.slick.font.effects.ColorEffect;
 import org.newdawn.slick.state.*;
 
 public class Menu extends BasicGameState {
@@ -22,11 +21,7 @@ public class Menu extends BasicGameState {
 	
 	public void init(GameContainer gc, StateBasedGame sbg) throws SlickException {
 		
-		titleFont = new UnicodeFont("data/gamefont.ttf", FONT_SIZE, false, false);
-		//TODO: figure out how to fix this shit.
-		titleFont.getEffects().add(new ColorEffect(java.awt.Color.WHITE));
-		titleFont.addAsciiGlyphs();
-		titleFont.loadGlyphs();
+		titleFont = Utility.getFont(FONT_SIZE);
 		
 		int y = 0;
 		Interactable start = new MenuItemString("New Game", 0, y);
