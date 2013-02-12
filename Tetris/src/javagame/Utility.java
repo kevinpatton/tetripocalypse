@@ -5,6 +5,7 @@ import org.newdawn.slick.UnicodeFont;
 import org.newdawn.slick.font.effects.ColorEffect;
 
 public class Utility {
+	@SuppressWarnings("unchecked")
 	public static UnicodeFont getFont(int size) {
 		UnicodeFont font = null;
 		try {
