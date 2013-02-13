@@ -18,6 +18,8 @@ public class GameModeSelect extends BasicGameState {
 	private UnicodeFont font;
 	private String[] splashText;
 	private Image clearPreview;
+	private Image standardPreview;
+	private Menu menu;
 	
 	public GameModeSelect(int state) {
 		
@@ -36,14 +38,18 @@ public class GameModeSelect extends BasicGameState {
 		splashText[1] = "Start with random blocks inhabiting the board\n"
 				+ "and clear your way to the bottom!";
 		clearPreview = new Image("res/clearpreview.png");
+		standardPreview = new Image("res/standardmode.png");
 	}
 
 	@Override
 	//TODO: preview picture!
 	public void render(GameContainer gc, StateBasedGame sbg, Graphics g) 
 			throws SlickException {
-		if (gameModeMenu.getSelection() == 1)
+		int selection = gameModeMenu.getSelection();
+		if (selection == 1)
 			g.drawImage(clearPreview, 570, 100);
+		else if (selection == 0)
+			g.drawImage(standardPreview, 570, 100);
 		FontUtils.drawCenter(font, "Select the game mode", 0, 10, 1024, Color.orange);
 		gameModeMenu.render(g);
 		g.drawString(splashText[gameModeMenu.getSelection()], 100, 400);
@@ -58,12 +64,23 @@ public class GameModeSelect extends BasicGameState {
 		if (selection != -1) {
 			play.setGameMode(selection);
 			input.clearKeyPressedRecord();
-			sbg.enterState(1);
+			//TODO: we need to call Menu.menu.gameActive() here.. yeah. and delete it in menu.
+			//because we are getting 'resume game' after backing out of GameModeSelect..... >.<
+			menu.menu.gameActive();
+			sbg.enterState(1); //game
+		}
+		if (input.isKeyPressed(Input.KEY_ESCAPE)) {
+			input.clearKeyPressedRecord();
+			sbg.enterState(0); //main menu
 		}
 	}
 	
 	public void setPlay(Play p) {
 		play = p;
+	}
+	
+	public void setMenu(Menu m) {
+		menu = m;
 	}
 
 	@Override

@@ -25,6 +25,7 @@ public class Game extends StateBasedGame {
 		m.setPlay(p);
 		GameModeSelect g = new GameModeSelect(gameModeSelect);
 		g.setPlay(p);
+		g.setMenu(m);
 		this.addState(p);
 		this.addState(new GameOver(gameOver, p));
 		this.addState(new Credits(credits));

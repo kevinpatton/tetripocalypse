@@ -46,7 +46,6 @@ public class Menu extends BasicGameState {
 		switch (selection) {
 		case 0:
 			input.clearKeyPressedRecord();
-			menu.gameActive();
 			if (!play.inGame)
 				sbg.enterState(5);
 			else
