@@ -50,6 +50,7 @@ public class Menu extends BasicGameState {
 		bg = new Image("res/tetripocalypse.png");
 	}
 	
+	//renders the main menu
 	public void render(GameContainer gc, StateBasedGame sbg, Graphics g)
 			throws SlickException {
 		g.drawImage(bg, 0, 0);
@@ -59,27 +60,28 @@ public class Menu extends BasicGameState {
 		titleFont.drawString(100, 97, "TETRIPOCALYPSE", Color.orange);
 	}
 	
+	//updates the main menu
 	public void update(GameContainer gc, StateBasedGame sbg, int delta)
 			throws SlickException {
 		Input input = gc.getInput();
 		int selection = menu.acceptInput(input);
 		switch (selection) {
-		case 0:
+		case 0: //new game/resume game
 			input.clearKeyPressedRecord();
 			if (!play.inGame)
 				sbg.enterState(5);
 			else
 				sbg.enterState(1);
 			break;
-		case 1:
+		case 1: //options
 			//TODO implement the options screen
-			//sbg.enterState(OPTION SCREEN);
+			//sbg.enterState(OPTION_SCREEN);
 			break;
-		case 2:
+		case 2: //credits
 			input.clearKeyPressedRecord();
 			sbg.enterState(3);
 			break;
-		case 3:
+		case 3: //quit
 			System.exit(0);
 			break;
 		}
