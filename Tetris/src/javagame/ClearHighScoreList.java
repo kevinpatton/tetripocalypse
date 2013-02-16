@@ -32,7 +32,7 @@ public class ClearHighScoreList implements Serializable {
 			madeIt = true;
 		}
 		Collections.sort(highScores);
-		Collections.reverse(highScores);
+		//Collections.reverse(highScores);
 		return madeIt;
 	}
 	
@@ -61,7 +61,7 @@ public class ClearHighScoreList implements Serializable {
 				"Nin-ten-ele", "Hillder", "Maranyne", "Fluffy Bunny Old Slopes", "K-man",
 				"Ashara"};
 		for (int i = 0; i < 10; i++) {
-			ClearScore s = new ClearScore(names[i], 50000 * i + 1000);
+			ClearScore s = new ClearScore(names[i], 52043L * i + 51211L);
 			clearScores.add(s);
 		}
 		return clearScores;

@@ -8,7 +8,7 @@ import org.newdawn.slick.state.StateBasedGame;
 
 public class Options extends BasicGameState {
 	
-	private Play play;
+	//private Play play;
 
 	public Options(int state) {
 		
@@ -31,9 +31,9 @@ public class Options extends BasicGameState {
 
 	}
 	
-	public void setPlay(Play p) {
-		play = p;
-	}
+	//public void setPlay(Play p) { TODO uncomment
+		//play = p;
+	//}
 
 	@Override
 	public int getID() {

@@ -31,9 +31,17 @@ public class GameOver extends BasicGameState {
 	public void render(GameContainer arg0, StateBasedGame arg1, Graphics arg2) throws SlickException {
 		arg2.drawImage(bg, 0, 0);
 		arg2.drawString("You have lost.", 300, 200);
-		arg2.drawString("Final score: " + play.getScore(), 300, 220);
-		arg2.drawString("High scores:", 300, 240);
-		arg2.drawString(play.highScoreList.toString(), 150, 260);
+		int gameMode = play.getGameMode();
+		if (gameMode == 0) {
+			arg2.drawString("Final score: " + play.getScore(), 300, 220);
+			arg2.drawString("Standard high scores:", 300, 240);
+			arg2.drawString(play.highScoreList.toString(), 150, 260);
+		}
+		else if (gameMode == 1) {
+			arg2.drawString("Final score: " + play.getElapsedTime() / 1000.00d + " seconds", 300, 220);
+			arg2.drawString("Clear mode high scores:", 300, 240);
+			arg2.drawString(play.clearHighScoreList.toString(), 150, 260);
+		}
 	}
 
 	public void update(GameContainer arg0, StateBasedGame arg1, int arg2) throws SlickException {

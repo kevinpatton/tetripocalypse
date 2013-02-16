@@ -1,6 +1,7 @@
 package javagame;
 
 import java.io.Serializable;
+import java.text.DecimalFormat;
 
 public class ClearScore implements Serializable, Comparable<ClearScore> {
 	
@@ -10,10 +11,12 @@ public class ClearScore implements Serializable, Comparable<ClearScore> {
 	public String name;
 	
 	private long elapsedTime;
+	private static DecimalFormat format;
 	
 	public ClearScore(String name, long elapsedTime) {
 		this.name = name;
 		this.elapsedTime = elapsedTime;
+		format = new DecimalFormat("#.00");
 	}
 	
 	public long getElapsedTime() {
@@ -21,9 +24,16 @@ public class ClearScore implements Serializable, Comparable<ClearScore> {
 	}
 	
 	@Override
+	//returns this object as a String representation
 	public String toString() {
-		double seconds = elapsedTime / 1000;
-		return new Double(seconds).toString() + " seconds";
+		Double d = new Double(elapsedTime);
+		int z = name.length() + 3 + d.toString().length();
+		int numberOfSpaces = LENGTH - z;
+		String spaces = "";
+		for (int i = 0; i < numberOfSpaces; i++)
+			spaces += " ";
+		double seconds = (double)elapsedTime / 1000.00D;
+		return name + spaces + format.format(seconds) + " seconds";
 	}
 	
 	public int compareTo(ClearScore that) {

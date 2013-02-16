@@ -28,10 +28,11 @@ public class Game extends StateBasedGame {
 		g.setPlay(p);
 		g.setMenu(m);
 		Options o = new Options(options);
-		o.setPlay(p);
+		//o.setPlay(p); TODO uncomment
 		this.addState(p);
 		this.addState(new GameOver(gameOver, p));
 		this.addState(new Credits(credits));
+		this.addState(o);
 		UserInput u = new UserInput(userInput);
 		u.setPlay(p);
 		p.setUserInput(u);

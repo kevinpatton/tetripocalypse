@@ -76,8 +76,15 @@ public class UserInput extends BasicGameState {
 		
 		Input input = gc.getInput();
 		if (input.isKeyPressed(Input.KEY_ENTER)) {
-			play.highScoreList.add(new Score(userInput, score));
-			play.saveHighScores();
+			int gameMode = play.getGameMode();
+			if (gameMode == 0) {
+				play.highScoreList.add(new Score(userInput, score));
+				play.saveHighScores();
+			}
+			else if (gameMode == 1) {
+				play.clearHighScoreList.add(new ClearScore(userInput, play.getElapsedTime()));
+				play.saveClearHighScores();
+			}
 			userInput = "";
 			score = 0;
 			input.clearKeyPressedRecord();

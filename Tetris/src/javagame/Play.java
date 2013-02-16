@@ -323,8 +323,12 @@ public class Play extends BasicGameState {
 	private void checkForGameOver(Input i, StateBasedGame s) {
 		if (tetradInPlay.gameOver()) {
 			gameOver = true;
-			boolean madeIt = highScoreList.checkForHighScore(score);
-			//saveHighScores();
+			boolean madeIt = false;
+			if (gameMode == 0) {
+				madeIt = highScoreList.checkForHighScore(score);
+			} else if (gameMode == 1) {
+				madeIt = clearHighScoreList.checkForHighScore(elapsedTime);
+			}
 			theme.stop();
 			inGame = false;
 			menu.menu.gameDone();
@@ -573,6 +577,18 @@ public class Play extends BasicGameState {
 		}
 	}
 	
+	public void saveClearHighScores() {
+		try {
+			FileOutputStream fileOut = new FileOutputStream("data/clearhighscores.ser");
+			ObjectOutputStream out = new ObjectOutputStream(fileOut);
+			out.writeObject(clearHighScoreList);
+			out.close();
+			fileOut.close();
+		} catch(IOException i) {
+			i.printStackTrace();
+		}
+	}
+	
 	/**
 	 * Returns
 	 * @param n the row of the gameBoard to get
@@ -636,6 +652,14 @@ public class Play extends BasicGameState {
 	
 	public void setGameMode(int mode) {
 		gameMode = mode;
+	}
+	
+	public int getGameMode() {
+		return gameMode;
+	}
+	
+	public long getElapsedTime() {
+		return elapsedTime;
 	}
 	
 	/**
