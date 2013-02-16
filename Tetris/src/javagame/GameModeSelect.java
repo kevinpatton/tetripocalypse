@@ -29,10 +29,10 @@ public class GameModeSelect extends BasicGameState {
 	public void init(GameContainer gc, StateBasedGame sbg) throws SlickException {
 		font = Utility.getFont(30);
 		int y = 0;
-		Interactable standard = new MenuItemString("Standard", 200, y);
-		Interactable clear = new MenuItemString("Clear", 200, y+=30);
+		Interactable standard = new MenuItemString("Standard",0, y);
+		Interactable clear = new MenuItemString("Clear", 0, y+=30);
 		gameModeMenu = new MenuStrip(standard, clear);
-		gameModeMenu.setLocation(80, 120);
+		gameModeMenu.setLocation(280, 120);
 		splashText = new String[2];
 		splashText[0] = "Standard Tetris with some twists.";
 		splashText[1] = "Start with random blocks inhabiting the board\n"

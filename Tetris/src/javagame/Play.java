@@ -55,6 +55,7 @@ public class Play extends BasicGameState {
 	boolean inGame = false;
 	boolean tetrisAchieved = false;
 	
+	//audio
 	private Music theme;
 	private Sound thud;
 	private Sound levelup;
@@ -66,9 +67,13 @@ public class Play extends BasicGameState {
 	private boolean rightBeingHeldDown = false;
 	private boolean softBeingHeldDown = false;
 	
+	//is the ghost targetting feature enabled?
 	private boolean ghostingOn = false;
 	
 	public HighScoreList highScoreList;
+	public ClearHighScoreList clearHighScoreList;//TODO: this..
+	private long elapsedTime = 0; // the elapsed time for this game
+	//we make sure to pause it when the player goes to a menu, etc.
 	
 	private Menu menu;
 	private UserInput userInput;
@@ -93,6 +98,8 @@ public class Play extends BasicGameState {
 		for (int i = 0; i < 5; i++)
 			ghostImages[i] = new Image("res/ghost" + (i + 1) + ".png" );
 		ghost = new Animation(ghostImages, ghostFrameDelay);
+		
+		// initialize the board's data structure.
 		// board has a border around the play area for collision
 		// detection purposes. The actual play area is only 10x20.
 		// Here we set up these boundaries in the board array.
@@ -126,6 +133,11 @@ public class Play extends BasicGameState {
 			highScoreList = loadHighScoreList();
 		else
 			highScoreList = new HighScoreList();
+		File clearHighScores = new File("data/clearhighscores.ser");
+		if (clearHighScores.exists())
+			clearHighScoreList = loadClearHighScoreList();
+		else
+			clearHighScoreList = new ClearHighScoreList();
 	}
 	
 	public void enter(GameContainer container, StateBasedGame game) {
@@ -143,7 +155,10 @@ public class Play extends BasicGameState {
 	//graphics
 	public void render(GameContainer gc, StateBasedGame sbg, Graphics g) throws SlickException {
 		g.drawString("Level: " + level, 900, 550);
-		g.drawString("Score: " + score, 900, 300);
+		if (gameMode == 0)
+			g.drawString("Score: " + score, 900, 300);
+		else if (gameMode == 1)
+			g.drawString("Time: " + elapsedTime / 1000 + " seconds", 830, 300);
 		g.drawString("Lines: " + lines, 900, 400);
 		g.drawString("Next:", 725, 100);
 		drawBoard(g);
@@ -172,31 +187,39 @@ public class Play extends BasicGameState {
 	public void update(GameContainer gc, StateBasedGame sbg, int delta) throws SlickException {
 		timeSinceFall += delta;
 		timeSinceMove += delta;
+		if (gameMode == 1 && inGame)
+			elapsedTime += delta;
 		
 		Input input = gc.getInput();
 		
 		if (timeSinceFall >= blockFallDelay) {
 			if(!tetradInPlay.fall()) {
+				
+				//If we reach here, the tetrad cannot fall any more.
+				//Thus, we should stick it to the board.
 				stick(tetradInPlay);
 				thud.play();
-				int type = sevenBag.nextInt();
+				
+				//move the 'next' piece into the board area and make it
+				//the current piece.
 				tetradInPlay = next;
 				tetradInPlay.setReal();
 				
-				// *******************
-				// |  YOU LOSE!!!!!  |
-				// *******************
-				
+				//choose a new 'next' piece.
+				int type = sevenBag.nextInt();
 				next = new Tetrad(type, tetradImages[type - 1], board);
 				next.setNext();
 				
+				//is the game over?
 				checkForGameOver(input, sbg);
 			}
 			timeSinceFall = 0;
-			if (softBeingHeldDown) 
+			if (softBeingHeldDown && gameMode == 1) 
 				score += 1;
 		}
 		
+		//check to see if the player has cleared a row. If so, clear
+		//it and drop the lines above it by one.
 		checkForCompletedRows();
 		
 		if (!input.isKeyDown(Input.KEY_LEFT))
@@ -234,16 +257,21 @@ public class Play extends BasicGameState {
 		}
 		
 		if (input.isKeyDown(Input.KEY_D) && !softBeingHeldDown) {
-			tempBlockFallDelay = blockFallDelay;
-			blockFallDelay = softDropDelay;
-			softBeingHeldDown = true;
+			if (blockFallDelay > softDropDelay) {
+				tempBlockFallDelay = blockFallDelay;
+				blockFallDelay = softDropDelay;
+				softBeingHeldDown = true;
+			}
 		}
 		
 		if (input.isKeyPressed(Input.KEY_F))
 			ghostingOn = !ghostingOn;
 		
 		if (input.isKeyPressed(Input.KEY_S))
-			score += 1000; //TODO: take this out of the final release
+			if (gameMode == 0)
+				score += 1000; //TODO: take this out of the final release
+			else if (gameMode == 1)
+				elapsedTime -= 10000;
 		
 		if (input.isKeyPressed(Input.KEY_UP)) {
 			tetradInPlay.rotate();
@@ -270,13 +298,18 @@ public class Play extends BasicGameState {
 			checkForGameOver(input, sbg);
 			
 		}
-		if (input.isKeyPressed(Input.KEY_SPACE)) {
+		
+		//if spacebar is pressed, change the skip the current piece
+		//and get the next one. A cheat for testing.
+		if (input.isKeyPressed(Input.KEY_SPACE)) {//TODO remove from final
 			int type = sevenBag.nextInt();
 			tetradInPlay = next;
 			tetradInPlay.setReal();
 			next = new Tetrad(type, tetradImages[type - 1], board);
 			next.setNext();
 		}
+		
+		//go to the main menu if escape is pressed.
 		if (input.isKeyPressed(Input.KEY_ESCAPE)) {
 			theme.pause();
 			input.clearKeyPressedRecord();
@@ -284,12 +317,14 @@ public class Play extends BasicGameState {
 		}
 	}
 	
+	//checks to see if tetradInPlay has been initialized on top
+	//of solid blocks. If so, we prepare to end the game and
+	//go to the high score list.
 	private void checkForGameOver(Input i, StateBasedGame s) {
 		if (tetradInPlay.gameOver()) {
 			gameOver = true;
-			//boolean madeIt = highScoreList.add(new Score("Player", score));
 			boolean madeIt = highScoreList.checkForHighScore(score);
-			saveHighScores();
+			//saveHighScores();
 			theme.stop();
 			inGame = false;
 			menu.menu.gameDone();
@@ -322,13 +357,14 @@ public class Play extends BasicGameState {
 		}
 	}
 	
-	//TODO: finish this function.
 	/**
 	 * Renders a 'ghost' Tetrad signifying the location that the
 	 * tetrad in play would end up should the player perform a hard
 	 * drop.
 	 * @param g the render object
 	 */
+	//TODO: this method is a bit unoptimized.. in the event you need the
+	//FPS
 	private void drawGhostTetrad(Graphics g) {
 		//we have a ghost tetrad object..
 		int[] locationToDrawGhostTetrad = new int[8];
@@ -377,6 +413,22 @@ public class Play extends BasicGameState {
 			FileInputStream fileIn = new FileInputStream("data/highscores.ser");
 			ObjectInputStream in = new ObjectInputStream(fileIn);
 			h = (HighScoreList) in.readObject();
+			in.close();
+			fileIn.close();
+		} catch (IOException i) {
+			i.printStackTrace();
+		} catch (ClassNotFoundException c) {
+			c.printStackTrace();
+		}
+		return h;
+	}
+	
+	private ClearHighScoreList loadClearHighScoreList() {
+		ClearHighScoreList h = null;
+		try {
+			FileInputStream fileIn = new FileInputStream("data/clearhighscores.ser");
+			ObjectInputStream in = new ObjectInputStream(fileIn);
+			h = (ClearHighScoreList) in.readObject();
 			in.close();
 			fileIn.close();
 		} catch (IOException i) {
@@ -506,9 +558,10 @@ public class Play extends BasicGameState {
 		level = 1;
 		lineTargetForNextLevel = 10;
 		blockFallDelay = 800;
+		elapsedTime = 0;
 	}
 	
-	private void saveHighScores() {
+	public void saveHighScores() {
 		try {
 			FileOutputStream fileOut = new FileOutputStream("data/highscores.ser");
 			ObjectOutputStream out = new ObjectOutputStream(fileOut);

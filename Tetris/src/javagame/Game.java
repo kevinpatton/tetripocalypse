@@ -15,6 +15,7 @@ public class Game extends StateBasedGame {
 	public static final int credits = 3;
 	public static final int userInput = 4;
 	public static final int gameModeSelect = 5;
+	public static final int options = 6;
 	
 	public Game(String gameName) {
 		super(gameName);
@@ -26,6 +27,8 @@ public class Game extends StateBasedGame {
 		GameModeSelect g = new GameModeSelect(gameModeSelect);
 		g.setPlay(p);
 		g.setMenu(m);
+		Options o = new Options(options);
+		o.setPlay(p);
 		this.addState(p);
 		this.addState(new GameOver(gameOver, p));
 		this.addState(new Credits(credits));
