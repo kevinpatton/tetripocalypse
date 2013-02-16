@@ -56,7 +56,8 @@ public class MenuStrip {
 			menuItems.add(item);
 			size++;
 		}
-		lineHeight = menuItems.get(0).getHeight();
+		if (size > 0)
+			lineHeight = menuItems.get(0).getHeight();
 	}
 	
 	/**
