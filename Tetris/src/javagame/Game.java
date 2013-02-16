@@ -47,6 +47,7 @@ public class Game extends StateBasedGame {
 		this.getState(credits).init(gc, this);
 		this.getState(userInput).init(gc, this);
 		this.getState(gameModeSelect).init(gc, this);
+		this.getState(options).init(gc, this);
 		this.enterState(menu);
 	}
 	
