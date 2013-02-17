@@ -5,6 +5,7 @@ import org.newdawn.slick.state.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.io.*;
+import java.util.Random;
 
 /**
  * @author Kevin
@@ -15,6 +16,18 @@ import java.io.*;
  */
 
 public class Play extends BasicGameState {
+	
+	private BasicParticle particle;
+	private Image particleImage;
+	
+	private boolean mottle = true;
+	private double shakeDuration = 400.0d; //400
+	private double shakeAmplitude = 20.0d; //15
+	private double shakePeriod = 4.0d;
+	private double x = 0.0d;
+	private double shakeStep = 0.08d; //0.08
+	private boolean shake = false;
+	private Random r = new Random();
 	
 	//the speed increase of the blocks when we level up
 	//(or rather, the decrease of the delay between the
@@ -102,6 +115,7 @@ public class Play extends BasicGameState {
 	
 	// This method is called once when the game first loads.
 	public void init(GameContainer gc, StateBasedGame sbg) throws SlickException {
+				
 		// initialize the RNG
 		sevenBag = new SevenBag();
 		
@@ -115,6 +129,10 @@ public class Play extends BasicGameState {
 		for (int i = 0; i < 5; i++)
 			ghostImages[i] = new Image("res/ghost" + (i + 1) + ".png" );
 		ghost = new Animation(ghostImages, ghostFrameDelay);
+		particleImage = new Image("res/particle.png");
+		
+		//test
+		particle = getParticle();
 		
 		// initialize the board's data structure.
 		// board has a border around the play area for collision
@@ -185,6 +203,7 @@ public class Play extends BasicGameState {
 		drawTetrad(next, g);
 		if (ghostingOn)
 			drawGhostTetrad(g);
+		particle.render(g);
 	}
 	
 	/**
@@ -199,15 +218,28 @@ public class Play extends BasicGameState {
 		for (int i = 0; i < 8; i += 2) {
 			board[location[i]][location[i+1]] = type;
 		}
+		shakeScreen();
+	}
+	
+	private BasicParticle getParticle() {
+		return new BasicParticle(particleImage, 400, 400);
 	}
 	
 	//game logic
 	public void update(GameContainer gc, StateBasedGame sbg, int delta) throws SlickException {
 		timeSinceFall += delta;
 		timeSinceMove += delta;
+		if (shake) {
+			x += shakeStep;
+		}
+		if (x >= shakeDuration) {
+			x = 0.0d;
+			shake = false;
+		}
 		if (gameMode == 1 && inGame)
 			elapsedTime += delta;
 		
+		particle.update(delta);
 		Input input = gc.getInput();
 		
 		if (timeSinceFall >= blockFallDelay) {
@@ -287,6 +319,9 @@ public class Play extends BasicGameState {
 		
 		if (input.isKeyPressed(Input.KEY_C))
 			resetBoard();
+		
+		if (input.isKeyPressed(Input.KEY_P))
+			particle = getParticle();
 			
 		if (input.isKeyPressed(Input.KEY_S))
 			if (gameMode == 0)
@@ -297,6 +332,9 @@ public class Play extends BasicGameState {
 		if (input.isKeyPressed(Input.KEY_UP)) {
 			tetradInPlay.rotate();
 			rotate.play();
+		}
+		if (input.isKeyPressed(Input.KEY_A)) {
+			shakeScreen();
 		}
 		if (input.isKeyPressed(Input.KEY_DOWN)) { //hard drop
 			
@@ -357,6 +395,8 @@ public class Play extends BasicGameState {
 			inGame = false;
 			menu.menu.gameDone();
 			userInput.receiveScore(score);
+			shake = false;
+			x = 0.0d;
 			i.clearKeyPressedRecord();
 			if (madeIt) {
 				userInput.receiveScore(score);
@@ -379,8 +419,11 @@ public class Play extends BasicGameState {
 	private void drawTetrad(Tetrad t, Graphics g) {
 		int i = 0;
 		int[] location = t.getLocation();
+		double a = 0.0;
+		if (shake && t == tetradInPlay)
+			a = shakeY(x, shakeAmplitude);
 		while (i <= 7) {
-			drawBlock(location[i], location[i+1], t.getImage(), g);
+			drawBlock(location[i], location[i+1], t.getImage(), g, a);
 			i += 2;
 		}
 	}
@@ -470,7 +513,14 @@ public class Play extends BasicGameState {
 		for (int i = 0; i < 22; i++) {
 			for (int j = 0; j < 12; j++) {
 				if (board[j][i] != 0) {
-					g.drawImage(tetradImages[board[j][i]-1], j*blockSize+playAreaOffsetX, i*blockSize+playAreaOffsetY);
+					double a = 0.0;
+					double b = 0.0;
+					if (mottle)
+						b += r.nextDouble();
+					if (shake)
+						a = shakeY(x+b, shakeAmplitude);
+					g.drawImage(tetradImages[board[j][i]-1], j*blockSize+playAreaOffsetX, i*blockSize+playAreaOffsetY+(float)a);
+					//g.drawI
 				}
 			}
 		}
@@ -729,13 +779,29 @@ public class Play extends BasicGameState {
 	 * @param block the image to be rendered
 	 * @param g the render object
 	 */
-	private void drawBlock(int x, int y, Image block, Graphics g) {
-		g.drawImage(block, playAreaOffsetX + blockSize*x, playAreaOffsetY+blockSize*y);
+	private void drawBlock(int x, int y, Image block, Graphics g, double a) {
+		g.drawImage(block, playAreaOffsetX + blockSize*x, playAreaOffsetY+blockSize*y+(float)a);
 	}
 	
 	//draws a ghost block animation at x, y
 	private void drawGhostBlock(int x, int y, Graphics g) {
-		ghost.draw(playAreaOffsetX + blockSize*x, playAreaOffsetY+blockSize*y);
+		double a = 0.0;
+		 if (shake)
+			a = shakeY(this.x, shakeAmplitude);
+		ghost.draw(playAreaOffsetX + blockSize*x, playAreaOffsetY+blockSize*y+(float)a);
+	}
+	
+	private double shakeY(double x, double amplitude) {
+		//y=30*e^(-x)*sin(4*pi*x)
+		return amplitude * Math.pow(Math.E, -1*x) * Math.sin(shakePeriod*Math.PI*x);
+	}
+	
+	private void shakeScreen() {
+		if (!shake)
+			shake = true;
+		else {
+			x = 0.0d;
+		}
 	}
 	
 	public int getID() {
