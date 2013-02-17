@@ -32,7 +32,6 @@ public class ClearHighScoreList implements Serializable {
 			madeIt = true;
 		}
 		Collections.sort(highScores);
-		//Collections.reverse(highScores);
 		return madeIt;
 	}
 	
@@ -45,6 +44,7 @@ public class ClearHighScoreList implements Serializable {
 
 	// Returns this HighScoreList in a String representation.
 	public String toString() {
+		
 		String estr = "";
 		for (ClearScore s : highScores) {
 			estr += s + "\n";

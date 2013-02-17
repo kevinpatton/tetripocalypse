@@ -20,6 +20,7 @@ public class GameOver extends BasicGameState {
 	}
 
 	public void enter(GameContainer gc, StateBasedGame sbg) {
+		//TODO play a win sound if the player wins clear mode
 		lose.play();
 	}
 	
@@ -30,9 +31,19 @@ public class GameOver extends BasicGameState {
 
 	public void render(GameContainer arg0, StateBasedGame arg1, Graphics arg2) throws SlickException {
 		arg2.drawImage(bg, 0, 0);
-		arg2.drawString("You have lost.", 300, 200);
 		int gameMode = play.getGameMode();
+		boolean badWin = play.badWin;
+		
+		if (gameMode == 1) {
+			if (badWin) {
+				arg2.drawString("You have failed completely. I award you no points.", 300, 200);
+			}
+			else
+				arg2.drawString("Congrats! You've won!", 300, 200);
+		}
+		
 		if (gameMode == 0) {
+			arg2.drawString("You have lost.", 300, 200);
 			arg2.drawString("Final score: " + play.getScore(), 300, 220);
 			arg2.drawString("Standard high scores:", 300, 240);
 			arg2.drawString(play.highScoreList.toString(), 150, 260);
@@ -47,6 +58,7 @@ public class GameOver extends BasicGameState {
 	public void update(GameContainer arg0, StateBasedGame arg1, int arg2) throws SlickException {
 		Input input = arg0.getInput();
 		if (input.isKeyPressed(Input.KEY_ENTER) || input.isKeyPressed(Input.KEY_ESCAPE)) {
+			play.saveClearHighScores();
 			play.resetGame();
 			input.clearKeyPressedRecord();
 			arg1.enterState(0);

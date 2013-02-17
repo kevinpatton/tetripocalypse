@@ -16,25 +16,33 @@ import java.io.*;
 
 public class Play extends BasicGameState {
 	
-	/**
-	 * This rate determines the decrease in time between
-	 * when Tetrads fall. It is multiplied by this time
-	 * each time the level advances by one.
-	 */
-	public static final double timerDecayRate = 0.86; //0.84
+	//the speed increase of the blocks when we level up
+	//(or rather, the decrease of the delay between the
+	//falling of pieces)
+	public static final double timerDecayRate = 0.86;
+	//the location of the game area on the screen
 	public static final int playAreaOffsetX = 200;
 	public static final int playAreaOffsetY = 20;
+	//size in pixels of blocks that make up the pieces
 	public static final int blockSize = 32;
+	//number of blocks on the board
 	public static final int boardWidth = 12;
 	public static final int boardHeight = 22;
+	//how quickly the piece moves if the player holds down
+	//left or right
 	public static final long tetradMoveDelay = 165;
+	//this value is multiplied by the number of rows
+	//a block falls after being hard dropped for scoring
 	public static final int HD_SCORE_MODIFIER = 2;
+	//how quickly the block falls when the player performs
+	//soft drop
 	public static final int softDropDelay = 60;
+	//how quickly the ghost targetting animation cycles
 	public static final int ghostFrameDelay = 50;
+	//how 'dense' are the starting blocks in clear mode
 	public static final double clearModeDensity = 0.65;
 	
-	/** The delay, in milliseconds, between which tetrads
-		fall. */
+	//how quickly the pieces fall in ms
 	private long blockFallDelay = 800;
 	private long tempBlockFallDelay = 0;
 	private int timeSinceFall = 0;
@@ -44,11 +52,11 @@ public class Play extends BasicGameState {
 	private int lines = 0;
 	private int score = 0;
 	
+	//the RNG
 	private SevenBag sevenBag;
 	private Image[] tetradImages;
+	private Animation ghost;	
 	private Tetrad tetradInPlay;
-	private Animation ghost;
-	
 	private Tetrad next;
 	private int[][] board;
 	boolean gameOver = false;
@@ -67,20 +75,29 @@ public class Play extends BasicGameState {
 	private boolean rightBeingHeldDown = false;
 	private boolean softBeingHeldDown = false;
 	
-	//is the ghost targetting feature enabled?
+	//is the ghost targeting feature enabled?
 	private boolean ghostingOn = false;
 	
+	//how did the player finish the clear game mode? By being
+	//overwhelmed or by clearing their way to the bottom?
+	public boolean badWin = false;
+	//high score lists
 	public HighScoreList highScoreList;
-	public ClearHighScoreList clearHighScoreList;//TODO: this..
-	private long elapsedTime = 0; // the elapsed time for this game
+	public ClearHighScoreList clearHighScoreList;
+	//the elapsed time for this game
 	//we make sure to pause it when the player goes to a menu, etc.
+	private long elapsedTime = 0;
 	
 	private Menu menu;
 	private UserInput userInput;
 	
+	//0 for standard, 1 for clear mode
 	private int gameMode = 0;
+	//ID for this BasicGameState
+	private int state;
 	
 	public Play(int state) {
+		this.state = state;
 	}
 	
 	// This method is called once when the game first loads.
@@ -140,6 +157,7 @@ public class Play extends BasicGameState {
 			clearHighScoreList = new ClearHighScoreList();
 	}
 	
+	//this method is called each time we enter the game state
 	public void enter(GameContainer container, StateBasedGame game) {
 		if (!inGame) {
 			theme.loop();
@@ -267,6 +285,9 @@ public class Play extends BasicGameState {
 		if (input.isKeyPressed(Input.KEY_F))
 			ghostingOn = !ghostingOn;
 		
+		if (input.isKeyPressed(Input.KEY_C))
+			resetBoard();
+			
 		if (input.isKeyPressed(Input.KEY_S))
 			if (gameMode == 0)
 				score += 1000; //TODO: take this out of the final release
@@ -321,13 +342,16 @@ public class Play extends BasicGameState {
 	//of solid blocks. If so, we prepare to end the game and
 	//go to the high score list.
 	private void checkForGameOver(Input i, StateBasedGame s) {
-		if (tetradInPlay.gameOver()) {
+		if ( (badWin = tetradInPlay.gameOver()) || clearModeWon()) {
 			gameOver = true;
 			boolean madeIt = false;
 			if (gameMode == 0) {
 				madeIt = highScoreList.checkForHighScore(score);
 			} else if (gameMode == 1) {
-				madeIt = clearHighScoreList.checkForHighScore(elapsedTime);
+				if (badWin)
+					madeIt = false;
+				else
+					madeIt = clearHighScoreList.checkForHighScore(elapsedTime);
 			}
 			theme.stop();
 			inGame = false;
@@ -370,7 +394,7 @@ public class Play extends BasicGameState {
 	//TODO: this method is a bit unoptimized.. in the event you need the
 	//FPS
 	private void drawGhostTetrad(Graphics g) {
-		//we have a ghost tetrad object..
+		//figure out where to render the ghost tetrad
 		int[] locationToDrawGhostTetrad = new int[8];
 		int[] playTetradLocation = tetradInPlay.getLocation();
 		for (int i = 0; i < 8; i++)
@@ -380,7 +404,7 @@ public class Play extends BasicGameState {
 			locationToDrawGhostTetrad = drop(locationToDrawGhostTetrad);
 		}
 		locationToDrawGhostTetrad = raise(locationToDrawGhostTetrad);
-		//render
+		//render the ghost tetrad
 		for (int i = 0; i < 8; i += 2)
 			drawGhostBlock(locationToDrawGhostTetrad[i], locationToDrawGhostTetrad[i + 1], g);
 	}
@@ -418,7 +442,6 @@ public class Play extends BasicGameState {
 			ObjectInputStream in = new ObjectInputStream(fileIn);
 			h = (HighScoreList) in.readObject();
 			in.close();
-			fileIn.close();
 		} catch (IOException i) {
 			i.printStackTrace();
 		} catch (ClassNotFoundException c) {
@@ -434,7 +457,6 @@ public class Play extends BasicGameState {
 			ObjectInputStream in = new ObjectInputStream(fileIn);
 			h = (ClearHighScoreList) in.readObject();
 			in.close();
-			fileIn.close();
 		} catch (IOException i) {
 			i.printStackTrace();
 		} catch (ClassNotFoundException c) {
@@ -443,6 +465,7 @@ public class Play extends BasicGameState {
 		return h;
 	}
 	
+	//draws the blocks on the gameboard
 	private void drawBoard(Graphics g) {
 		for (int i = 0; i < 22; i++) {
 			for (int j = 0; j < 12; j++) {
@@ -457,12 +480,19 @@ public class Play extends BasicGameState {
 		return score;
 	}
 	
+	//called when the player clears a line. We determine if
+	//they have reached the next level and take the proper
+	//actions if so.
 	private void advanceLevelIfNecessary() {
 		if (lines >= lineTargetForNextLevel) {
 			lineTargetForNextLevel += 10;
 			level++;
 			blockFallDelay *= timerDecayRate;
 			tempBlockFallDelay *= timerDecayRate;
+			
+			//if we level up at the same time we get a tetris,
+			//give precedence to playing the tetris sound over
+			//the levelup sound.
 			if (tetrisAchieved) {
 				tetrisAchieved = false;
 			}
@@ -495,7 +525,6 @@ public class Play extends BasicGameState {
 				r--;
 			}
 		}
-		//advanceLevelIfNecessary();
 		
 		//scoring
 		
@@ -518,6 +547,10 @@ public class Play extends BasicGameState {
 		advanceLevelIfNecessary();
 	}
 	
+	//ready the board for the clear game mode.
+	//@param density a double value between 0.0 and 1.0
+	//that indicates the likelihood that a given block will
+	//be filled
 	private void initClearMode(double density) {
 		java.util.Random r = new java.util.Random();
 		for (int i = 20; i > 12; i--) {
@@ -543,11 +576,36 @@ public class Play extends BasicGameState {
 		return true;
 	}
 	
+	//returns whether row n is clear (contains all zeroes)
+	//in board
+	private boolean rowClear(int n) {
+		for (int i = 1; i < 11; i++)
+			if (board[i][n] != 0)
+				return false;
+		return true;
+	}
+	
+	//returns whether the player has won a game in clear
+	//mode
+	private boolean clearModeWon() {
+		boolean clear = true;
+		for (int i = 18; i > 0; i--) {
+			if (!rowClear(i)) {
+				clear = false;
+				break;
+			}
+		}
+		return clear && (gameMode == 1);
+	}
+	
+	//replaces a row on the board with 0s, effectively
+	//clearing it.
 	private void removeRow(int n) {
 		for (int i = 1; i < 11; i++)
 			board[i][n] = 0;
 	}
 	
+	//clears the entire board
 	public void resetBoard() {
 		for (int i = 1; i < 21; i++)
 			removeRow(i);
@@ -563,27 +621,28 @@ public class Play extends BasicGameState {
 		lineTargetForNextLevel = 10;
 		blockFallDelay = 800;
 		elapsedTime = 0;
+		badWin = false;
 	}
 	
+	//saves the high score list for default mode
 	public void saveHighScores() {
 		try {
 			FileOutputStream fileOut = new FileOutputStream("data/highscores.ser");
 			ObjectOutputStream out = new ObjectOutputStream(fileOut);
 			out.writeObject(highScoreList);
 			out.close();
-			fileOut.close();
 		} catch(IOException i) {
 			i.printStackTrace();
 		}
 	}
 	
+	//saves high score list for clear game mode
 	public void saveClearHighScores() {
 		try {
 			FileOutputStream fileOut = new FileOutputStream("data/clearhighscores.ser");
 			ObjectOutputStream out = new ObjectOutputStream(fileOut);
 			out.writeObject(clearHighScoreList);
 			out.close();
-			fileOut.close();
 		} catch(IOException i) {
 			i.printStackTrace();
 		}
@@ -674,11 +733,12 @@ public class Play extends BasicGameState {
 		g.drawImage(block, playAreaOffsetX + blockSize*x, playAreaOffsetY+blockSize*y);
 	}
 	
+	//draws a ghost block animation at x, y
 	private void drawGhostBlock(int x, int y, Graphics g) {
 		ghost.draw(playAreaOffsetX + blockSize*x, playAreaOffsetY+blockSize*y);
 	}
 	
 	public int getID() {
-		return 1;
+		return state;
 	}
 }

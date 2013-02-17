@@ -11,12 +11,11 @@ public class ClearScore implements Serializable, Comparable<ClearScore> {
 	public String name;
 	
 	private long elapsedTime;
-	private static DecimalFormat format;
+	private static final DecimalFormat format = new DecimalFormat("#.00");
 	
 	public ClearScore(String name, long elapsedTime) {
 		this.name = name;
 		this.elapsedTime = elapsedTime;
-		format = new DecimalFormat("#.00");
 	}
 	
 	public long getElapsedTime() {
