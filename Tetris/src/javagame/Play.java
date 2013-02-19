@@ -21,7 +21,7 @@ public class Play extends BasicGameState {
 	private Image particleImage;
 	
 	private boolean mottle = true;
-	private double shakeDuration = 400.0d; //400
+	private double shakeDuration = 4.0d; //400
 	private double shakeAmplitude = 20.0d; //15
 	private double shakePeriod = 4.0d;
 	private double x = 0.0d;

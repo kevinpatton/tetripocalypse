@@ -15,8 +15,12 @@ public class MenuStrip {
 	public static final int DEFAULT_NEXT = Input.KEY_DOWN;
 	public static final int DEFAULT_PREVIOUS = Input.KEY_UP;
 	public static final int DEFAULT_SELECT = Input.KEY_ENTER;
+	public static final float SELECT_VOLUME = 0.5f;
+	public static final float DEFAULT_PITCH = 1.0f;
 	
 	private ArrayList<Interactable> menuItems;
+	private int[] menuSong;
+	private int menuSongIndex = 0;
 	
 	private Animation cursorAnimation;
 	/** The sound the plays when the user changes the menu selection. */
@@ -37,6 +41,8 @@ public class MenuStrip {
 	private int x = 0;
 	private int y = 0;
 	private int lineHeight = 0;
+	//private float selectPitch = DEFAULT_PITCH;
+	//private int semitone = -1;
 	
 	/**
 	 * Constructor that allows you to initialize the menu items.
@@ -58,6 +64,7 @@ public class MenuStrip {
 		}
 		if (size > 0)
 			lineHeight = menuItems.get(0).getHeight();
+		menuSong = initMenuSong();
 	}
 	
 	/**
@@ -85,6 +92,14 @@ public class MenuStrip {
 		return selection;
 	}
 	
+	public void playMenuSongNote() {
+		selectSound.play(z(menuSong[menuSongIndex]), SELECT_VOLUME);
+		if (menuSongIndex >= menuSong.length - 1)
+			menuSongIndex = 0;
+		else
+			menuSongIndex++;
+	}
+	
 	public void render(Graphics g) {
 		cursorAnimation.draw(x - 40, y + selection * lineHeight);
 		for (Interactable i : menuItems) {
@@ -101,18 +116,61 @@ public class MenuStrip {
 	public int acceptInput(Input input) {
 		if (input.isKeyPressed(nextKey)) {
 			advanceSelection();
-			selectSound.play();
+			//selectSound.play(z(semitone++), SELECT_VOLUME);
+			playMenuSongNote();
 		}
 		if (input.isKeyPressed(previousKey)) {
 			regressSelection();
-			selectSound.play();
+			//selectSound.play(z(semitone++), SELECT_VOLUME);
+			playMenuSongNote();
 		}
 		if (input.isKeyPressed(selectKey)) {
 			System.out.println("Selected " + selection + ".");
+		//	selectPitch = DEFAULT_PITCH;
 			return selection;
 		}
 		return -1;
 	}
+	
+	//c, c#, d, ef, e, f, f#, g, af, a, bf, b -> c
+	//-1, 0, 1, 2 , 3, 4, 5 , 6, 7 , 8, 9, 10
+	private float z(int n) {
+		return (float)Math.pow(2.0, n*1.0/12.0);
+	}
+	
+	//private ArrayList<Integer> coi (String...notes) {
+		//ArrayList<Integer> noteValues = new ArrayList<Integer>();
+		//for (String note: notes) {
+			//noteValues.add(convertStV(note));
+		//}
+		//return noteValues;
+	//}
+	
+	private int[] initMenuSong() {
+		//song = coi("d","a","b&","c","b&","a","g","g","b&","d","c","b&");
+		int[] song = {1,-4,-3,-1,-3,-4,-6,-6,-3,1,-1,-3,-4,-3,-1,
+				1,-3,-6,-6,-1,2,6,4,2,1,-3,1,-1,-3,-4,-4,-3,-1,1,-3,-6,-6,
+				1,-3,-1,-4,-3,-6,-7,-4,1,-3,-1,-4,-3,1,6,5};
+		return song;
+	}
+	
+	/*private int convertStV(String note) {
+		switch (note) {
+		case"c":return -1;
+		case"c#":return 0;
+		case"d":return 1;
+		case"e&":return 2;
+		case"e":return 3;
+		case"f":return 4;
+		case"f#":return 5;
+		case"g":return 6;
+		case"a&":return 7;
+		case"a":return 8;
+		case"b&":return 9;
+		case"b":return 10;
+		default:return -1;
+		}
+	}*/
 	
 	/**
 	 * Changes the menu selection to be one before whatever
